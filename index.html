@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Control de Laptops — Colegio Saco Oliveros</title>
+  <style>
+    :root{
+      --primary:#0b6e4f;
+      --accent:#0b83b8;
+      --bg:#f7faf7;
+      --card:#ffffff;
+      --muted:#6b6b6b;
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
+    body{margin:0;background:var(--bg);color:#0b0b0b}
+    header{background:linear-gradient(90deg,var(--primary),var(--accent));color:white;padding:14px 18px;display:flex;gap:12px;align-items:center}
+    header img{height:46px;border-radius:6px;background:white;padding:4px}
+    .container{max-width:1100px;margin:18px auto;padding:18px}
+    .card{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 6px 18px rgba(10,10,10,0.06);margin-bottom:16px}
+    h1{margin:0 0 6px 0;font-size:20px}
+    p.lead{margin:0;color:var(--muted)}
+    form .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    label{display:block;font-size:13px;margin-bottom:6px}
+    select,input[type=text],input[type=date]{padding:8px;border-radius:8px;border:1px solid #e2e8f0;min-width:160px}
+    .checkboxes{display:flex;gap:12px;align-items:center}
+    .btn{padding:10px 14px;border-radius:10px;border:0;cursor:pointer}
+    .btn.primary{background:var(--primary);color:white}
+    .btn.ghost{background:transparent;border:1px solid #d1d5db}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{padding:10px;border-bottom:1px solid #eef2f6;text-align:left;font-size:14px;vertical-align:top}
+    th{background:#fbfeff}
+    .small{font-size:12px;color:var(--muted)}
+    .actions button{margin-right:6px}
+    .badge{display:inline-block;padding:6px;border-radius:8px;font-size:12px}
+    .badge.pending{background:#fff7cc;color:#7a5b00}
+    .badge.complete{background:#e6ffef;color:#0b6e4f}
+    footer{padding:14px;text-align:center;color:var(--muted);font-size:13px;margin-top:18px}
+    @media (max-width:720px){
+      form .row{flex-direction:column}
+      header{flex-direction:column;align-items:flex-start}
+    }
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center}
+    .modal{background:var(--card);padding:18px;border-radius:12px;max-width:420px;width:92%;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
+    .muted { color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 100 100'><rect rx='12' width='100' height='100' fill='%23ffffff'/><text x='50' y='55' font-size='10' text-anchor='middle' fill='%230b6e4f' font-family='Arial'>Logo Colegio</text></svg>" alt="Logo Colegio" />
+    <div>
+      <h1 style="margin:0;color:white;">Control de Laptops</h1>
+      <div class="small">Registro de entrega y recepción diaria — Colegio Saco Oliveros</div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h1>Registrar entrega</h1>
+      <p class="lead">Seleccione la laptop, marque los accesorios entregados y registre la persona que entrega.</p>
+
+      <form id="deliveryForm" onsubmit="return false;">
+        <div class="row">
+          <div style="flex:2;min-width:200px">
+            <label for="laptop">Laptop</label>
+            <select id="laptop" required>
+              <option value="">-- Seleccionar --</option>
+              <option value="LAP-01">LAP-01</option>
+              <option value="LAP-02">LAP-02</option>
+              <option value="LAP-03">LAP-03</option>
+              <option value="LAP-04">LAP-04</option>
+              <option value="LAP-05">LAP-05</option>
+              <option value="LAP-06">LAP-06</option>
+            </select>
+          </div>
+
+          <div style="flex:2;min-width:200px">
+            <label for="date">Fecha de entrega</label>
+            <input type="date" id="date" required />
+          </div>
+
+          <div style="flex:3;min-width:220px">
+            <label for="deliveredBy">Persona que entrega</label>
+            <select id="deliveredBy" required>
+              <option value="">-- Seleccionar --</option>
+              <option value="Juan Pérez">Juan Pérez</option>
+              <option value="María López">María López</option>
+              <option value="Carlos García">Carlos García</option>
+              <option value="Ana Torres">Ana Torres</option>
+              <option value="Luis Fernández">Luis Fernández</option>
+            </select>
+          </div>
+
+          <div style="flex:3;min-width:220px">
+            <label>Accesorios entregados</label>
+            <div class="checkboxes">
+              <label><input type="checkbox" id="mouse" /> Mouse</label>
+              <label><input type="checkbox" id="estuche" /> Estuche</label>
+              <label><input type="checkbox" id="charger" /> Cargador</label>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <button type="button" class="btn primary" id="btnRegister">Registrar entrega</button>
+          <button type="button" class="btn ghost" id="btnExport">Exportar CSV</button>
+          <button type="button" class="btn" id="btnClear">Limpiar registros</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h1>Registros</h1>
+      <p class="small">En la columna "Estado" verá si la recepción del día ya fue registrada.</p>
+      <div id="tableWrap"></div>
+    </div>
+
+    <div class="card">
+      <h1>Reporte por fecha</h1>
+      <p class="small">Seleccione una fecha para generar un reporte PDF solo de los dispositivos recepcionados.</p>
+
+      <div class="row" style="margin-top:10px">
+        <div>
+          <label for="reportDate">Fecha</label>
+          <input type="date" id="reportDate" />
+        </div>
+        <div style="align-self:flex-end">
+          <button type="button" class="btn primary" id="btnGenerateReport">Generar PDF</button>
+        </div>
+      </div>
+
+      <div id="reportPreview" style="margin-top:15px" class="small"></div>
+    </div>
+
+    <footer class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap">
+        <div class="small">© 2025 Ciencia y Bienestar | Todos los derechos reservados.</div>
+        <div class="small">Diseño: Colegio Saco Oliveros</div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modal para recepción -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="modalTitle">Recepcionar laptop</h3>
+      <div style="margin-top:8px">
+        <label for="receivedBy">Persona que recibe</label>
+        <input type="text" id="receivedBy" placeholder="Nombre completo" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e2e8f0;margin-top:6px" />
+      </div>
+      <div style="margin-top:8px">
+        <label for="isComplete">¿Completo?</label>
+        <select id="isComplete" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e2e8f0;margin-top:6px">
+          <option value="">-- Seleccionar --</option>
+          <option value="si">Sí (todos los accesorios)</option>
+          <option value="no">No (algún accesorio falta)</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+        <button type="button" class="btn ghost" id="modalCancel">Cancelar</button>
+        <button type="button" class="btn primary" id="modalSave">Guardar recepción</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- jsPDF y autoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+  <script>
+    const LS_KEY = 'control_laptops_records_v1';
+
+    function loadRecords(){
+      try{ return JSON.parse(localStorage.getItem(LS_KEY)) || []; }catch(e){ return []; }
+    }
+    function saveRecords(records){ localStorage.setItem(LS_KEY, JSON.stringify(records)); }
+
+    function renderTable(){
+      const records = loadRecords();
+      const wrap = document.getElementById('tableWrap');
+      if(records.length === 0){ wrap.innerHTML = '<div class="small">No hay registros todavía.</div>'; return; }
+
+      let html = '<table><thead><tr><th>Laptop</th><th>Fecha entrega</th><th>Entregado por</th><th>Accesorios</th><th>Recepción</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
+      records.forEach((r, idx) => {
+        const accessories = [r.mouse?'Mouse':'', r.estuche?'Estuche':'', r.cargador?'Cargador':''].filter(Boolean).join(', ') || '<span class="small">Ninguno</span>';
+        const reception = r.receivedBy ? `Fecha: ${r.receivedDate}<br>Por: ${r.receivedBy}<br>Completo: ${r.complete?'Sí':'No'}` : '<span class="small">Pendiente</span>';
+        const status = r.receivedBy ? '<span class="badge complete">Recepcionado</span>' : '<span class="badge pending">Pendiente</span>';
+        html += `<tr>
+          <td>${r.laptop}</td>
+          <td>${r.date}</td>
+          <td>${r.deliveredBy}</td>
+          <td>${accessories}</td>
+          <td>${reception}</td>
+          <td>${status}</td>
+          <td class="actions">
+            ${r.receivedBy ? '' : `<button type="button" class="btn" onclick="openReceiveModal(${idx})">Recepcionar</button>`}
+            <button type="button" class="btn" onclick="editRecord(${idx})">Editar</button>
+            <button type="button" class="btn" onclick="deleteRecord(${idx})">Eliminar</button>
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      wrap.innerHTML = html;
+    }
+
+    document.getElementById('btnRegister').addEventListener('click', () => {
+      const laptop = document.getElementById('laptop').value;
+      const date = document.getElementById('date').value;
+      const deliveredBy = document.getElementById('deliveredBy').value;
+      const mouse = document.getElementById('mouse').checked;
+      const estuche = document.getElementById('estuche').checked;
+      const cargador = document.getElementById('charger').checked;
+
+      if(!laptop || !date || !deliveredBy){ alert('Complete los campos obligatorios.'); return; }
+
+      const records = loadRecords();
+      const newRec = { laptop,date,deliveredBy,mouse,estuche,cargador,receivedBy:null,receivedDate:null,complete:null,createdAt:new Date().toISOString() };
+      records.push(newRec);
+      saveRecords(records);
+      renderTable();
+      document.getElementById('deliveryForm').reset();
+      document.getElementById('laptop').focus();
+    });
+
+    document.getElementById('btnExport').addEventListener('click', () => {
+      const records = loadRecords();
+      if(records.length===0){alert('No hay registros.');return;}
+      const header = ['Laptop','FechaEntrega','EntregadoPor','Mouse','Estuche','Cargador','FechaRecepcion','RecepcionadoPor','Completo','RegistradoEn'];
+      const rows = records.map(r=>[r.laptop,r.date,r.deliveredBy,r.mouse?'Sí':'No',r.estuche?'Sí':'No',r.cargador?'Sí':'No',r.receivedDate||'',r.receivedBy||'',r.complete===null?'':(r.complete?'Sí':'No'),r.createdAt]);
+      const csv=[header.join(','),...rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(','))].join('\n');
+      const blob=new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download='control_laptops.csv'; a.click(); URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('btnClear').addEventListener('click',()=>{if(confirm('Eliminar todos los registros?')){localStorage.removeItem(LS_KEY);renderTable();}});
+
+    let currentIndex=null;
+    function openReceiveModal(idx){ currentIndex=idx; document.getElementById('modalBackdrop').style.display='flex'; }
+    document.getElementById('modalCancel').addEventListener('click',()=>{document.getElementById('modalBackdrop').style.display='none';currentIndex=null;});
+    document.getElementById('modalSave').addEventListener('click',()=>{
+      const name=document.getElementById('receivedBy').value.trim(); const isComplete=document.getElementById('isComplete').value;
+      if(!name||!isComplete){alert('Complete los campos.');return;}
+      const records=loadRecords(); records[currentIndex].receivedBy=name; records[currentIndex].receivedDate=new Date().toISOString().slice(0,10); records[currentIndex].complete=(isComplete==='si');
+      saveRecords(records);document.getElementById('modalBackdrop').style.display='none';currentIndex=null;renderTable();
+    });
+    window.openReceiveModal=openReceiveModal;
+
+    function editRecord(idx){
+      const records=loadRecords();const r=records[idx];if(!r)return;
+      const newDeliveredBy=prompt('Editar nombre de quien entregó:',r.deliveredBy)||r.deliveredBy;
+      r.deliveredBy=newDeliveredBy;saveRecords(records);renderTable();
+    }
+    window.editRecord=editRecord;
+
+    function deleteRecord(idx){if(!confirm('Eliminar este registro?'))return;const records=loadRecords();records.splice(idx,1);saveRecords(records);renderTable();}
+    window.deleteRecord=deleteRecord;
+
+    // --- PDF ---
+    document.getElementById('btnGenerateReport').addEventListener('click', () => {
+      const reportDate=document.getElementById('reportDate').value; const preview=document.getElementById('reportPreview'); preview.innerHTML='';
+      if(!reportDate){alert('Seleccione una fecha.');return;}
+      const records=loadRecords().filter(r=>r.receivedBy&&r.receivedDate===reportDate);
+      if(records.length===0){preview.innerHTML=`<span style="color:red">No hay registros recepcionados en ${reportDate}.</span>`;return;}
+
+      const {jsPDF}=window.jspdf;const doc=new jsPDF();
+      doc.setFontSize(14);doc.text('Reporte de Laptops Recepcionadas',14,20);
+      doc.setFontSize(11);doc.text(`Fecha del reporte: ${reportDate}`,14,30);
+
+      const rows=records.map(r=>[
+        r.laptop,
+        r.date+" / "+r.deliveredBy,
+        [r.mouse?'Mouse':'',r.estuche?'Estuche':'',r.cargador?'Cargador':''].filter(Boolean).join(', ')||'Ninguno',
+        r.receivedDate+" / "+r.receivedBy+" ("+(r.complete?'Sí':'No')+")"
+      ]);
+
+      doc.autoTable({
+        startY:40,
+        head:[['Laptop','Entrega / Entregado por','Accesorios','Recepción / Recepcionado por']],
+        body:rows,
+        styles:{fontSize:9,cellPadding:3},
+        headStyles:{fillColor:[11,110,79],textColor:255}
+      });
+
+      doc.save(`reporte_laptops_${reportDate}.pdf`);
+      preview.innerHTML=`<span style="color:green">PDF generado con ${records.length} registro(s).</span>`;
+    });
+
+    renderTable();
+  </script>
+</body>
+</html>
