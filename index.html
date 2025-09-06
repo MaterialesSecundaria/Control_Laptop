@@ -44,6 +44,7 @@
     .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center}
     .modal{background:var(--card);padding:18px;border-radius:12px;max-width:420px;width:92%;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
     .muted { color: var(--muted); font-size: 13px; }
+    .filter-row{margin:10px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   </style>
 </head>
 <body>
@@ -56,10 +57,9 @@
   </header>
 
   <div class="container">
+    <!-- Registro -->
     <div class="card">
       <h1>Registrar entrega</h1>
-      <p class="lead">Seleccione la laptop, marque los accesorios entregados y registre la persona que entrega.</p>
-
       <form id="deliveryForm" onsubmit="return false;">
         <div class="row">
           <div style="flex:2;min-width:200px">
@@ -84,10 +84,10 @@
             <label for="deliveredBy">Persona a quien se entrega</label>
             <select id="deliveredBy" required>
               <option value="">-- Seleccionar --</option>
-              <option value="Juan Pérez">Mauricio Roman</option>
-              <option value="María López">Cristian Astu</option>
-              <option value="Carlos García">Carlos Ceverino</option>
-              <option value="Ana Torres">Geovanna Riquez</option>
+              <option value="Mauricio Roman">Mauricio Roman</option>
+              <option value="Cristian Astu">Cristian Astu</option>
+              <option value="Carlos Ceverino">Carlos Ceverino</option>
+              <option value="Geovanna Riquez">Geovanna Riquez</option>
             </select>
           </div>
 
@@ -109,16 +109,21 @@
       </form>
     </div>
 
+    <!-- Registros -->
     <div class="card">
       <h1>Registros</h1>
-      <p class="small">En la columna "Estado" verá si la recepción del día ya fue registrada.</p>
+      <div class="filter-row">
+        <label for="filterDate">Filtrar por fecha:</label>
+        <input type="date" id="filterDate" />
+        <button type="button" class="btn ghost" id="btnClearFilter">Limpiar filtro</button>
+      </div>
       <div id="tableWrap"></div>
     </div>
 
+    <!-- Reporte -->
     <div class="card">
       <h1>Reporte por fecha</h1>
       <p class="small">Seleccione una fecha para generar un reporte PDF solo de los dispositivos recepcionados.</p>
-
       <div class="row" style="margin-top:10px">
         <div>
           <label for="reportDate">Fecha</label>
@@ -128,10 +133,10 @@
           <button type="button" class="btn primary" id="btnGenerateReport">Generar PDF</button>
         </div>
       </div>
-
       <div id="reportPreview" style="margin-top:15px" class="small"></div>
     </div>
 
+    <!-- Footer -->
     <footer class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap">
         <div class="small">© 2025 Ciencia y Bienestar | Todos los derechos reservados.</div>
@@ -140,10 +145,10 @@
     </footer>
   </div>
 
-  <!-- Modal para recepción -->
+  <!-- Modal -->
   <div class="modal-backdrop" id="modalBackdrop">
     <div class="modal" role="dialog" aria-modal="true">
-      <h3 id="modalTitle">Recepcionar laptop</h3>
+      <h3>Recepcionar laptop</h3>
       <div style="margin-top:8px">
         <label for="receivedBy">Persona que recibe</label>
         <input type="text" id="receivedBy" placeholder="Nombre completo" style="width:100%;padding:8px;border-radius:8px;border:1px solid #e2e8f0;margin-top:6px" />
@@ -163,25 +168,26 @@
     </div>
   </div>
 
-  <!-- jsPDF y autoTable -->
+  <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
   <script>
     const LS_KEY = 'control_laptops_records_v1';
+    let filterDate = "";
 
-    function loadRecords(){
-      try{ return JSON.parse(localStorage.getItem(LS_KEY)) || []; }catch(e){ return []; }
-    }
+    function loadRecords(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)) || []; }catch(e){ return []; } }
     function saveRecords(records){ localStorage.setItem(LS_KEY, JSON.stringify(records)); }
 
     function renderTable(){
       const records = loadRecords();
       const wrap = document.getElementById('tableWrap');
-      if(records.length === 0){ wrap.innerHTML = '<div class="small">No hay registros todavía.</div>'; return; }
+      let filtered = filterDate ? records.filter(r=>r.date===filterDate) : records;
+
+      if(filtered.length === 0){ wrap.innerHTML = '<div class="small">No hay registros para mostrar.</div>'; return; }
 
       let html = '<table><thead><tr><th>Laptop</th><th>Fecha entrega</th><th>Entregado por</th><th>Accesorios</th><th>Recepción</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>';
-      records.forEach((r, idx) => {
+      filtered.forEach((r, idx) => {
         const accessories = [r.mouse?'Mouse':'', r.estuche?'Estuche':'', r.cargador?'Cargador':''].filter(Boolean).join(', ') || '<span class="small">Ninguno</span>';
         const reception = r.receivedBy ? `Fecha: ${r.receivedDate}<br>Por: ${r.receivedBy}<br>Completo: ${r.complete?'Sí':'No'}` : '<span class="small">Pendiente</span>';
         const status = r.receivedBy ? '<span class="badge complete">Recepcionado</span>' : '<span class="badge pending">Pendiente</span>';
@@ -210,21 +216,15 @@
       const mouse = document.getElementById('mouse').checked;
       const estuche = document.getElementById('estuche').checked;
       const cargador = document.getElementById('charger').checked;
-
       if(!laptop || !date || !deliveredBy){ alert('Complete los campos obligatorios.'); return; }
 
       const records = loadRecords();
-      const newRec = { laptop,date,deliveredBy,mouse,estuche,cargador,receivedBy:null,receivedDate:null,complete:null,createdAt:new Date().toISOString() };
-      records.push(newRec);
-      saveRecords(records);
-      renderTable();
-      document.getElementById('deliveryForm').reset();
-      document.getElementById('laptop').focus();
+      records.push({ laptop,date,deliveredBy,mouse,estuche,cargador,receivedBy:null,receivedDate:null,complete:null,createdAt:new Date().toISOString() });
+      saveRecords(records); renderTable(); document.getElementById('deliveryForm').reset();
     });
 
     document.getElementById('btnExport').addEventListener('click', () => {
-      const records = loadRecords();
-      if(records.length===0){alert('No hay registros.');return;}
+      const records = loadRecords(); if(records.length===0){alert('No hay registros.');return;}
       const header = ['Laptop','FechaEntrega','EntregadoPor','Mouse','Estuche','Cargador','FechaRecepcion','RecepcionadoPor','Completo','RegistradoEn'];
       const rows = records.map(r=>[r.laptop,r.date,r.deliveredBy,r.mouse?'Sí':'No',r.estuche?'Sí':'No',r.cargador?'Sí':'No',r.receivedDate||'',r.receivedBy||'',r.complete===null?'':(r.complete?'Sí':'No'),r.createdAt]);
       const csv=[header.join(','),...rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(','))].join('\n');
@@ -255,6 +255,10 @@
     function deleteRecord(idx){if(!confirm('Eliminar este registro?'))return;const records=loadRecords();records.splice(idx,1);saveRecords(records);renderTable();}
     window.deleteRecord=deleteRecord;
 
+    // --- FILTRO POR FECHA ---
+    document.getElementById('filterDate').addEventListener('change', (e)=>{ filterDate=e.target.value; renderTable(); });
+    document.getElementById('btnClearFilter').addEventListener('click', ()=>{ filterDate=""; document.getElementById('filterDate').value=""; renderTable(); });
+
     // --- PDF ---
     document.getElementById('btnGenerateReport').addEventListener('click', () => {
       const reportDate=document.getElementById('reportDate').value; const preview=document.getElementById('reportPreview'); preview.innerHTML='';
@@ -270,19 +274,14 @@
         r.laptop,
         r.date+" / "+r.deliveredBy,
         [r.mouse?'Mouse':'',r.estuche?'Estuche':'',r.cargador?'Cargador':''].filter(Boolean).join(', ')||'Ninguno',
-        r.receivedDate+" / "+r.receivedBy+" ("+(r.complete?'Sí':'No')+")"
+        r.receivedBy,
+        r.complete?'Sí':'No'
       ]);
 
-      doc.autoTable({
-        startY:40,
-        head:[['Laptop','Entrega / Entregado por','Accesorios','Recepción / Recepcionado por']],
-        body:rows,
-        styles:{fontSize:9,cellPadding:3},
-        headStyles:{fillColor:[11,110,79],textColor:255}
-      });
-
-      doc.save(`reporte_laptops_${reportDate}.pdf`);
-      preview.innerHTML=`<span style="color:green">PDF generado con ${records.length} registro(s).</span>`;
+      doc.autoTable({ startY:40, head:[['Laptop','Entrega','Accesorios','Recepcionado por','Completo']], body:rows });
+      const total=records.length; doc.text(`Total de laptops recepcionadas: ${total}`,14, doc.lastAutoTable.finalY+10);
+      doc.save(`reporte_${reportDate}.pdf`);
+      preview.innerHTML=`<span style="color:green">Reporte generado con ${total} registro(s).</span>`;
     });
 
     renderTable();
